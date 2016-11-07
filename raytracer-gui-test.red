@@ -3,11 +3,15 @@ Red [
 	Needs: 'View
 ]
 
+update-progress: func [/local v [integer!] s [integer!]] [
+	v: 1.0 / any [all [attempt [s: load samples] integer? s s] 1]
+	Render-Button/extra: Render-Button/extra + v
+	Render-Button/text: rejoin ["Rendering... " render-Button/extra]
+]
 
 #system-global [
-	;#include %/E/Dev/red/red/runtime/random.reds
 	;_random/init
-	;_random/srand 123  
+	;_random/srand 123
 	;random/seed 123
 
 
@@ -15,14 +19,14 @@ Red [
 	    x [float!]
 	    y [float!]
 	    z [float!]
-	]	
+	]
 
 	material!: alias struct! [
    		type 	[integer!]
    		param1 	[vector3!]
    		param2 	[float!]
 	]
-		
+
 	sphere!: alias struct! [
 		center 	[vector3!]
 		radius 	[float!]
@@ -60,7 +64,7 @@ Trace: routine[
 		    x [float!]
 		    y [float!]
 		    z [float!]
-		]	
+		]
 
 		get-rand: func[
     		return: [float!]
@@ -77,8 +81,8 @@ Trace: routine[
 		    a 		[vector3!]
 		    b 		[vector3!]
 		    ][
-		    	dest/x: a/x - b/x 
-		    	dest/y: a/y - b/y 
+		    	dest/x: a/x - b/x
+		    	dest/y: a/y - b/y
 		    	dest/z: a/z - b/z
 		    ]
 
@@ -87,7 +91,7 @@ Trace: routine[
 		    a 		[vector3!]
 		    b 		[vector3!]
 		    ][
-		    	dest/x: a/x + b/x 
+		    	dest/x: a/x + b/x
 		    	dest/y: a/y + b/y
 		    	dest/z: a/z + b/z
 		    ]
@@ -97,7 +101,7 @@ Trace: routine[
 		    a 		[vector3!]
 		    b 		[vector3!]
 		    ][
-		    	dest/x: a/x * b/x 
+		    	dest/x: a/x * b/x
 		    	dest/y: a/y * b/y
 		    	dest/z: a/z * b/z
 		    ]
@@ -106,7 +110,7 @@ Trace: routine[
 			dest 	[Vector3!]
     		vec 	[vector3!]
     		f 		[float!]
-    		][      
+    		][
     			dest/x: vec/x * f
     			dest/y: vec/y * f
     			dest/z: vec/z * f
@@ -119,7 +123,7 @@ Trace: routine[
     		][
     		    dest/x: vec/x / f
     		    dest/y: vec/y / f
-    		    dest/z: vec/z / f  
+    		    dest/z: vec/z / f
     		]
 
 		vec3-dot: func [
@@ -132,7 +136,7 @@ Trace: routine[
 
 		vec3-cross: func [
 			dest 	[vector3!]
-		    a 		[vector3!] 
+		    a 		[vector3!]
 		    b 		[vector3!]
 		    ][
 		    	dest/x: (a/y * b/z) - (a/z * b/y)
@@ -147,41 +151,41 @@ Trace: routine[
 		    ][
 		        sqrt ((a/x * a/x) + (a/y * a/y) + (a/z * a/z))
 		    ]
-		
+
 
 		vec3-unitvector: func [
 		    a 		[vector3!]
-		    /local 
+		    /local
 		    	normalizeLength [float!]
 		    ][
 		    	normalizeLength: vec3-len a
-		    	vec3-Dfloat a a normalizeLength  
+		    	vec3-Dfloat a a normalizeLength
 		    ]
 
 		vec3-random-in-unit-sphere: func [
 			dest 	[vector3!]
-			/local 
+			/local
 				t 	[float!]
 				l 	[float!]
 				m 	[float!]
 				n 	[float!]
 			][
 				t: 2.0
-			
+
 				while [t >= 1.0][
 					l: get-rand m: get-rand n: get-rand
 					t: (l * l) + (m * m) + (n * n)
 				]
-				
+
 				dest/x: l dest/y: m dest/z: n
-				
+
 		    ]
 
 		vec3-reflect: function [
 			dest 	[vector3!]
-		    a 		[vector3!] 
+		    a 		[vector3!]
 		    b 		[vector3!]
-		    /local 
+		    /local
 		    	tf 	[float!]
 		    	v0 	[vector3!]
 		    	v1 	[vector3!]
@@ -189,23 +193,23 @@ Trace: routine[
 		    v0: as vector3! allocate size? vector3!
 			v1: as vector3! allocate size? vector3!
 
-			v0/x: a/x 
-			v0/y: a/y 
+			v0/x: a/x
+			v0/y: a/y
 			v0/z: a/z
 
-			v1/x: b/x 
-			v1/y: b/y 
-			v1/z: b/z 
+			v1/x: b/x
+			v1/y: b/y
+			v1/z: b/z
 
 		    tf: vec3-dot v0 v1
 		    tf: tf * 2.0
 
 		    vec3-Mfloat dest v1 tf
-		    vec3-sub dest v0 dest  
+		    vec3-sub dest v0 dest
 
 		    free as byte-ptr! v0
-			free as byte-ptr! v1   
-		]    
+			free as byte-ptr! v1
+		]
 
 
 		color: func[
@@ -214,7 +218,7 @@ Trace: routine[
 			rdirection [vector3!]
 			depth 	[integer!]
 			return:	[integer!]
-			/local 	
+			/local
 				unit-dir 	[vector3!]
 				t 			[float!]
 				v1 			[vector3!]
@@ -231,46 +235,46 @@ Trace: routine[
 				d 			[integer!]
 				check 		[logic!]
 		][
-			rec-t: declare pointer! [float!] 
+			rec-t: declare pointer! [float!]
 			rec-p: as vector3! allocate size? vector3!
 			rec-n: as vector3! allocate size? vector3!
 			rec-mat: as material! allocate size? material!
 			rec-mat/type: 1
-			rec-p/x: 0.0 
+			rec-p/x: 0.0
 			rec-p/y: 0.0
-			rec-p/z: 0.0		
-			rec-n/x: 0.0 
+			rec-p/z: 0.0
+			rec-n/x: 0.0
 			rec-n/y: 0.0
 			rec-n/z: 0.0
-	
+
 			v0: as vector3! allocate size? vector3!
 			attenuation: as vector3! allocate size? vector3!
-	
+
 			scattered-dir: as vector3! allocate size? vector3!
 			scattered-dir/x: 0.0
 			scattered-dir/y: 0.0
 			scattered-dir/z: 0.0
-	
+
 			scattered-origin: as vector3! allocate size? vector3!
 			scattered-origin/x: 0.0
 			scattered-origin/y: 0.0
 			scattered-origin/z: 0.0
-	
+
 			unit-dir: declare vector3!
-	
+
 			v1: declare vector3! v1/x: 1.0 v1/y: 1.0 v1/z: 1.0
 			v2: declare vector3! v2/x: 0.5 v2/y: 0.7 v2/z: 1.0
-	
-			d: depth 
+
+			d: depth
 			check: false
 			scres: false
-		
+
 			check: hit-list-hit rOrigin rDirection 0.001 1.0e32 rec-t rec-p rec-n rec-mat
-	
+
 			if (check)[
 				scres: scatter rOrigin rDirection rec-p rec-n attenuation scattered-origin scattered-dir rec-mat
 				either all[scres = true d < Max-Reflection-Depth][
-					color v0 scattered-origin scattered-dir (d + 1)			
+					color v0 scattered-origin scattered-dir (d + 1)
 					vec3-mul dest v0 attenuation
 					free as byte-ptr! attenuation
 					free as byte-ptr! scattered-dir
@@ -281,7 +285,7 @@ Trace: routine[
 					free as byte-ptr! rec-mat
 					return 1
 				][
-					dest/x: 0.0 dest/y: 0.0 dest/z: 0.0 
+					dest/x: 0.0 dest/y: 0.0 dest/z: 0.0
 					free as byte-ptr! attenuation
 					free as byte-ptr! scattered-dir
 					free as byte-ptr! scattered-origin
@@ -291,11 +295,11 @@ Trace: routine[
 					free as byte-ptr! rec-mat
 					return 0
 				]
-			] 
+			]
 			unit-dir: rdirection
 			vec3-unitvector unit-dir
 			t: 0.5 * (unit-dir/y + 1.0)
-			vec3-Mfloat v2 v2 t 
+			vec3-Mfloat v2 v2 t
 			vec3-Mfloat v1 v1 (1.0 - t)
 			vec3-add dest v1 v2
 			free as byte-ptr! attenuation
@@ -318,7 +322,7 @@ Trace: routine[
 			scattered-dir 	[vector3!]
 			mat 			[material!]
 			return: 		[logic!]
-			/local 
+			/local
 				target 		[vector3!]
 				v1 			[vector3!]
 				f 			[float!]
@@ -335,29 +339,29 @@ Trace: routine[
 			temp-rec-p: as vector3! allocate size? vector3!
 			temp-scat-dir: as vector3! allocate size? vector3!
 			temp-scat-orig: as vector3! allocate size? vector3!
-	
+
 			switch mat/type[
 				1[	;-- Lambert
 					vec3-random-in-unit-sphere v1
 					vec3-add target rec-p rec-n
 					vec3-add temp-scat-dir target v1
 					vec3-sub temp-scat-dir temp-scat-dir rec-p
-					scattered-origin/x: rec-p/x scattered-origin/y: rec-p/y scattered-origin/z: rec-p/z 
-					scattered-dir/x: temp-scat-dir/x scattered-dir/y: temp-scat-dir/y scattered-dir/z: temp-scat-dir/z 
+					scattered-origin/x: rec-p/x scattered-origin/y: rec-p/y scattered-origin/z: rec-p/z
+					scattered-dir/x: temp-scat-dir/x scattered-dir/y: temp-scat-dir/y scattered-dir/z: temp-scat-dir/z
 
-					attenuation/x: mat/param1/x 
-					attenuation/y: mat/param1/y 
+					attenuation/x: mat/param1/x
+					attenuation/y: mat/param1/y
 					attenuation/z: mat/param1/z
 					free as byte-ptr! target
 					free as byte-ptr! v1
 					free as byte-ptr! v3
 					free as byte-ptr! temp-rec-n
-					free as byte-ptr! temp-rec-p 
-					free as byte-ptr! temp-scat-dir 
+					free as byte-ptr! temp-rec-p
+					free as byte-ptr! temp-scat-dir
 					free as byte-ptr! temp-scat-orig
 					return true
 				]
-				2[  ;-- Metal	
+				2[  ;-- Metal
 					v3: rdirection-in
 					vec3-unitvector v3
 					vec3-reflect scattered-dir v3 rec-n
@@ -366,17 +370,17 @@ Trace: routine[
 					vec3-Mfloat v3 v3 mat/param2
 					vec3-add scattered-dir scattered-dir v3
 
-					scattered-origin/x: rec-p/x scattered-origin/y: rec-p/y scattered-origin/z: rec-p/z 
-					attenuation/x: mat/param1/x 
-					attenuation/y: mat/param1/y 
+					scattered-origin/x: rec-p/x scattered-origin/y: rec-p/y scattered-origin/z: rec-p/z
+					attenuation/x: mat/param1/x
+					attenuation/y: mat/param1/y
 					attenuation/z: mat/param1/z
 					f: vec3-dot scattered-dir rec-n
 					free as byte-ptr! target
 					free as byte-ptr! v1
 					free as byte-ptr! v3
 					free as byte-ptr! temp-rec-n
-					free as byte-ptr! temp-rec-p 
-					free as byte-ptr! temp-scat-dir 
+					free as byte-ptr! temp-rec-p
+					free as byte-ptr! temp-scat-dir
 					free as byte-ptr! temp-scat-orig
 					return (f > 0.0)
 				]
@@ -386,8 +390,8 @@ Trace: routine[
 			free as byte-ptr! v1
 			free as byte-ptr! v3
 			free as byte-ptr! temp-rec-n
-			free as byte-ptr! temp-rec-p 
-			free as byte-ptr! temp-scat-dir 
+			free as byte-ptr! temp-rec-p
+			free as byte-ptr! temp-scat-dir
 			free as byte-ptr! temp-scat-orig
 			return false
 		]
@@ -400,7 +404,7 @@ Trace: routine[
 			lower_left_corner [vector3!]
 			origin 		[vector3!]
 			dest 		[vector3!]
-			/local 
+			/local
 				temps 	[vector3!]
 				tempt 	[vector3!]
 		][
@@ -426,7 +430,7 @@ Trace: routine[
 			rec-n 		[vector3!]
 			rec-mat		[material!]
 			return: 	[logic!]
-			/local 	
+			/local
 				hit-anything 	[logic!]
 				closest-so-far 	[float!]
 				list-len 		[integer!]
@@ -439,28 +443,28 @@ Trace: routine[
 				temp-rec-n 		[vector3!]
 				temp-rec-mat 	[material!]
 		][
-			temp-rec-t: declare pointer! [float!] 
+			temp-rec-t: declare pointer! [float!]
 			temp-rec-p: as vector3! allocate size? vector3!
 			temp-rec-n: as vector3! allocate size? vector3!
 			temp-rec-mat: as material! allocate size? material!
-	
+
 			hit-anything: false
 			closest-so-far: t-max
-	
+
 			list-len: 16
-			item: declare sphere!							
+			item: declare sphere!
 			list-as-array: as byte-ptr! hit-list
 			i: 1
 			until [
-				item: as sphere! list-as-array 
-			   	check: hit-sphere item/center item/radius t-min closest-so-far rorigin rdirection temp-rec-t temp-rec-p temp-rec-n 
+				item: as sphere! list-as-array
+			   	check: hit-sphere item/center item/radius t-min closest-so-far rorigin rdirection temp-rec-t temp-rec-p temp-rec-n
 			    if (check) [
 			    	hit-anything: true
 			    	closest-so-far: temp-rec-t/value
-			    	rec-p/x: temp-rec-p/x rec-p/y: temp-rec-p/y rec-p/z: temp-rec-p/z 
-			    	rec-n/x: temp-rec-n/x rec-n/y: temp-rec-n/y rec-n/z: temp-rec-n/z 
+			    	rec-p/x: temp-rec-p/x rec-p/y: temp-rec-p/y rec-p/z: temp-rec-p/z
+			    	rec-n/x: temp-rec-n/x rec-n/y: temp-rec-n/y rec-n/z: temp-rec-n/z
 			    	rec-t/value: temp-rec-t/value
-	
+
 			    	rec-mat/type: item/material/type
 			    	rec-mat/param1: item/material/param1
 			    	rec-mat/param2: item/material/param2
@@ -469,11 +473,11 @@ Trace: routine[
 			    i: i + 1
 			    i > Scene-Length
 			]
-				
-			free as byte-ptr! temp-rec-t 
-			free as byte-ptr! temp-rec-p 
-			free as byte-ptr! temp-rec-n 
-			free as byte-ptr! temp-rec-mat 
+
+			free as byte-ptr! temp-rec-t
+			free as byte-ptr! temp-rec-p
+			free as byte-ptr! temp-rec-n
+			free as byte-ptr! temp-rec-mat
 			return hit-anything
 		]
 
@@ -488,7 +492,7 @@ Trace: routine[
 			rec-p 		[vector3!]
 			rec-n 		[vector3!]
 			return: 	[logic!]
-			/local 
+			/local
 				a 			[float!]
 				b 			[float!]
 				c 			[float!]
@@ -497,37 +501,37 @@ Trace: routine[
 				temp 		[float!]
 				ntemp 		[vector3!]
 		][
-			oc: 	as vector3! allocate size? vector3!	
+			oc: 	as vector3! allocate size? vector3!
 			ntemp:  as vector3! allocate size? vector3!
-		
+
 			vec3-sub oc rorigin center
 			a: vec3-dot rdirection rdirection
 			b: vec3-dot oc rdirection
 			c: (vec3-dot oc oc) - (radius * radius)
 			discriminant: (b * b) - (a * c)
-			
+
 			if (discriminant > 0.0) [
 				temp: ( ( (b * -1.0) - sqrt discriminant) / a)
 				if all [temp < t-max temp > t-min][
 					rec-t/value: temp
-				 	ray-pap rec-p rorigin rdirection temp 
+				 	ray-pap rec-p rorigin rdirection temp
 				 	vec3-sub ntemp rec-p center
 				 	vec3-Dfloat rec-n ntemp radius
 				 	free as byte-ptr! oc
 				 	free as byte-ptr! ntemp
-				 	return true	
+				 	return true
 				]
 				temp: ( ( (b * -1.0) + sqrt discriminant) / a)
 				if all [temp < t-max temp > t-min][
 					rec-t/value: temp
-				 	ray-pap rec-p rorigin rdirection temp 
+				 	ray-pap rec-p rorigin rdirection temp
 				 	vec3-sub ntemp rec-p center
 				 	vec3-Dfloat rec-n ntemp radius
 				 	free as byte-ptr! oc
 				 	free as byte-ptr! ntemp
-				 	return true	
+				 	return true
 				]
-			] 
+			]
 			free as byte-ptr! oc
 			free as byte-ptr! ntemp
 			return false
@@ -554,14 +558,14 @@ render: routine[
 	ny 				[integer!]
 	ns 				[integer!]
 	Depth 			[integer!]
-	px 				[float!] 
-	py 				[float!] 
-	pz 				[float!] 
+	px 				[float!]
+	py 				[float!]
+	pz 				[float!]
 	tx 				[float!]
 	ty 				[float!]
 	tz 				[float!]
 	img 			[image!]
-	/local 
+	/local
 		lower_left_corner 	[vector3!]
 		vertical 			[vector3!]
 		horizontal 			[vector3!]
@@ -586,15 +590,15 @@ render: routine[
 		fns  				[float!]
 		fi  				[float!]
 		fj  				[float!]
-		tempv 				[vector3!]			
+		tempv 				[vector3!]
 		pix 				[int-ptr!]
 		handle
-				
+
 ][
 
 			handle: 0
 			pix: image/acquire-buffer img :handle
-			
+
 			lower_left_corner: declare vector3!
 			vertical: declare vector3!
 			horizontal: declare vector3!
@@ -614,55 +618,57 @@ render: routine[
 			vec3-cross cam-u v-up cam-w
 			vec3-unitvector cam-u
 			vec3-cross cam-v cam-w cam-u
-			
-			
+
+
 			vec3-Mfloat lower_left_corner cam-u half-width
 			vec3-Mfloat vertical cam-v half-height
 			vec3-sub lower_left_corner origin lower_left_corner
 			vec3-sub lower_left_corner lower_left_corner vertical
 			vec3-sub lower_left_corner lower_left_corner cam-w
-	
+
 			vec3-Mfloat horizontal cam-u (2.0 * half-width)
 			vec3-Mfloat vertical cam-v (2.0 * half-height)
 
 			i: 0
 			j: ny - 1
 			s: 0
-			
+
 			u: 0.0
 			v: 0.0
 
 			Max-Reflection-Depth: Depth
-			
-			col: declare vector3! 
+
+			col: declare vector3!
 			col-temp: declare vector3!
 
-			
+
 			ir: 0 ig: 0 ib: 0
 			fnx: as float! nx
 			fny: as float! ny
 			fns: as float! ns
-			
+
 			tempv: declare vector3!
-	
+
 			{Main Loop}
 			while [j >= 0] [
 				i: 0
-				fj: as float! j 
+				fj: as float! j
 				while [i < nx] [
 					col/x: 0.0 		col/y: 0.0 		col/z: 0.0
-					fi: as float! i  
-					
+					fi: as float! i
+
 					while [s < ns][
 						col-temp/x: 0.0 col-temp/y: 0.0 col-temp/z: 0.0
 						u: (fi + get-rand) / fnx
 					 	v: (fj + get-rand) / fny
-			
+
 						get-ray u v horizontal vertical lower_left_corner origin tempv
 						color col-temp origin tempv 0
 						vec3-add col col col-temp
-			
+
 						s: s + 1
+
+						#call [update-progress]
 					]
 					vec3-Dfloat col col fns
 					ir: as integer! (255.99 * col/x)
@@ -675,29 +681,29 @@ render: routine[
 					pix: pix + 1
 				]
 				j: j - 1
-			]  
+			]
 			image/release-buffer img handle yes
 
 
-];-- end of render routine 
+];-- end of render routine
 
 convert: routine[
     ob 		[block!]
     ob-len 	[integer!]
-    /local 
-    	s 
-    	value 
-    	tail 
-    	fl 
-    	head 
-    	sphere 
-    	Pvec 
+    /local
+    	s
+    	value
+    	tail
+    	fl
+    	head
+    	sphere
+    	Pvec
     	Mvec
-    	mat 
+    	mat
 ][
 		Scene-Length: ob-len / 9
 		s: GET_BUFFER (ob)
-		
+
 		head:  s/offset
 		value: head
 		tail:  s/tail
@@ -719,8 +725,8 @@ convert: routine[
    	mat: material-list
 
    	hit-list: as sphere! allocate (ob-len / 9) * size? sphere!
-    sphere: hit-list 
-    
+    sphere: hit-list
+
 
     while [value < tail][
     	fl: as red-float! value
@@ -737,7 +743,7 @@ convert: routine[
 
 		fl: as red-float! (value + 4)
 		mat/type: as integer! fl/value
-		
+
 		fl: as red-float! (value + 5)
 		Mvec/x: as float! fl/value
 
@@ -777,7 +783,7 @@ parse-scene: function[
 	rule: [
     set name word! 'sphere
     any [radius | position ]
-    [lambert | metal] 
+    [lambert | metal]
     to end ( append translated  reduce [ ver v1 v2 v3 t m1 m2 m3 m4] )
 	]
 
@@ -793,14 +799,14 @@ parse-scene: function[
 ]
 
 Setup-Camera: function[
-	img 	[image!] 
-	Samples [string!] 
+	img 	[image!]
+	Samples [string!]
 	Depth 	[string!]
 	FOV 	[string!]
-	px 		[string!] 
-	py 		[string!] 
-	pz 		[string!] 
-	tx 		[string!] 
+	px 		[string!]
+	py 		[string!]
+	pz 		[string!]
+	tx 		[string!]
 	ty 		[string!]
 	tz 		[string!]
 	][
@@ -829,7 +835,7 @@ Setup-Camera: function[
 save-as-png: function[][
 	filename: request-file/save/filter["*.png"]
 	save filename display/image /as[png]
-	
+
 ]
 
 posx: 		"0.0"
@@ -885,7 +891,7 @@ canvas: make face! [
 		pen 60.60.60 			;--X box shadow
 		fill-pen 60.60.60
 		box 11x29 106x49 4
-		pen 100.100.100 		;--x box 
+		pen 100.100.100 		;--x box
 		fill-pen 120.120.120
 		box 10x28 105x48 4
 
@@ -917,7 +923,7 @@ canvas: make face! [
 		box 11x125 106x145 4
 		pen 100.100.100
 		fill-pen 120.120.120
-		box 10x124 105x144 4	
+		box 10x124 105x144 4
 
 		pen 60.60.60 			;--Y box shadow
 		fill-pen 60.60.60
@@ -954,27 +960,23 @@ canvas: make face! [
 		fill-pen 120.120.120
 		box 5x238 109x258 4
 
-		pen 60.60.60 		
+		pen 60.60.60
 		fill-pen 60.60.60
 		box 6x261 110x281 4
 		pen 100.100.100
 		fill-pen 120.120.120
 		box 5x260 109x280 4
 
-		pen 60.60.60 		
+		pen 60.60.60
 		fill-pen 60.60.60
 		box 6x283 110x303 4
 		pen 100.100.100
 		fill-pen 120.120.120
 		box 5x282 109x302 4
-		
+
 
 		fill-pen 200.200.200
 		box 134x270 642x378 4
-
-
-
-
 
 
 		fill-pen off
@@ -1037,7 +1039,20 @@ win: make face! [
 		]
 	]
 ]
-		
+
+; Predefine fields object
+field-large!: make face! [
+	type: 'field text: "0.0" size: 50x15
+	color: 120.120.120
+	font: font-Consolas
+	para: make para! [align: 'left]
+	flags: [no-border]
+]
+
+field-small!: make field-large! [
+	text: "0"
+	size: 35x15
+]
 
 win/pane: reduce [
 
@@ -1051,21 +1066,25 @@ win/pane: reduce [
 		image: make image! 500x250
 	]
 
-	
-
 	Render-Button: make face! [
-		type: 'button text: "Render" offset: 12x350 size: 115x40 font: font-Consolas color: 50.50.50
+		type: 'button text: "Render" extra: 0% offset: 12x350 size: 115x40
+		font: font-Consolas color: 50.50.50
 		para: make para! [align: 'center]
 		actors: object [
 			on-click: func [face [object!] event [event!]][
+				face/text: "Rendering..."
+				face/enable?: false
+				face/extra: 0%
 				parse-scene scene-block
 				Setup-Camera display/image samples depth fov posx posy posz tarx tary tarz
+				face/text: "Render"
+				face/enable?: true
 			]
 		]
 	]
 
 	make face! [
-		type: 'area text: "redsphere sphere radius 0.5 position 0.0 0.0 -1.0 lambert 1.0 0.2 0.2 0.0" offset: 150x302 size: 500x100 color: 200.200.200
+		type: 'area text: scene-block offset: 150x302 size: 500x100 color: 200.200.200
 		font: font-Consolas
 		flags: [no-border]
 		actors: object [
@@ -1075,12 +1094,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "0.0" offset: 60x58 size: 50x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-large! [
+		text: posx offset: 60x58
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				posx: face/text
@@ -1088,12 +1103,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "0.0" offset: 60x80 size: 50x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-large! [
+		text: posy offset: 60x80
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				posy: face/text
@@ -1101,12 +1112,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "0.0" offset: 60x102 size: 50x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-large! [
+		text: posz offset: 60x102
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				posz: face/text
@@ -1114,12 +1121,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "0.0" offset: 60x154 size: 50x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-large! [
+		text: tarx offset: 60x154
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				tarx: face/text
@@ -1127,12 +1130,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "0.0" offset: 60x176 size: 50x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-large! [
+		text: tary offset: 60x176
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				tary: face/text
@@ -1140,12 +1139,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "-1.0" offset: 60x198 size: 50x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-large! [
+		text: tarz  offset: 60x198
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				tarz: face/text
@@ -1153,12 +1148,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "10" offset: 82x268 size: 35x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-small! [
+		text: samples offset: 82x268
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				samples: face/text
@@ -1166,12 +1157,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "40" offset: 82x290 size: 35x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-small! [
+		text: depth offset: 82x290
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				depth: face/text
@@ -1179,12 +1166,8 @@ win/pane: reduce [
 		]
 	]
 
-	make face! [
-		type: 'field text: "90" offset: 82x312 size: 35x15 
-		color: 120.120.120
-		font: font-Consolas
-		para: make para! [align: 'left]
-		flags: [no-border]
+	make field-small! [
+		text: fov offset: 82x312
 		actors: object [
 			on-change: func [face [object!] event [event!]][
 				fov: face/text
@@ -1197,4 +1180,3 @@ win/pane: reduce [
 
 ;view/flags win [resize]
 view win
-
