@@ -3,12 +3,6 @@ Red [
 	Needs: 'View
 ]
 
-update-progress: func [/local v [integer!] s [integer!]] [
-	v: 1.0 / any [all [attempt [s: load samples] integer? s s] 1]
-	Render-Button/extra: Render-Button/extra + v
-	Render-Button/text: rejoin ["Rendering... " render-Button/extra]
-]
-
 #system-global [
 	;_random/init
 	;_random/srand 123
@@ -667,8 +661,6 @@ render: routine[
 						vec3-add col col col-temp
 
 						s: s + 1
-
-						#call [update-progress]
 					]
 					vec3-Dfloat col col fns
 					ir: as integer! (255.99 * col/x)
@@ -1040,7 +1032,7 @@ win: make face! [
 	]
 ]
 
-; Predefine fields object
+; Predefine fields object (avoid repeating same values)
 field-large!: make face! [
 	type: 'field text: "0.0" size: 50x15
 	color: 120.120.120
@@ -1072,12 +1064,11 @@ win/pane: reduce [
 		para: make para! [align: 'center]
 		actors: object [
 			on-click: func [face [object!] event [event!]][
-				face/text: "Rendering..."
-				face/enable?: false
-				face/extra: 0%
+				face/text: "Rendering..."	; Simple show that Rendering is in progress in the button
+				face/enable?: false			; Disabled while rendering
 				parse-scene scene-block
 				Setup-Camera display/image samples depth fov posx posy posz tarx tary tarz
-				face/text: "Render"
+				face/text: "Render"			; Set it back to previous state
 				face/enable?: true
 			]
 		]
@@ -1094,6 +1085,7 @@ win/pane: reduce [
 		]
 	]
 
+	; Use the prototypes fields
 	make field-large! [
 		text: posx offset: 60x58
 		actors: object [
