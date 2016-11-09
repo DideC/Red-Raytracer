@@ -3,11 +3,16 @@ Red [
 	Needs: 'View
 ]
 
-#system-global [
-	;_random/init
-	;_random/srand 123
-	;random/seed 123
+Render-button: none
+update-progress: func [v [integer!] nb [integer!] /local v2] [
+	if no-progress/data [exit]
+	v: round/to to float! v / to float! nb 0.01
+;	v2: Render-Button/extra + to percent! v
+;	Render-Button/extra: v2
+	Render-Button/text: form to percent! v ;rejoin ["Rendering " render-Button/extra]
+]
 
+#system-global [
 
 	vector3!: alias struct! [
 	    x [float!]
@@ -36,516 +41,516 @@ Red [
 	hit-list: as sphere! allocate size? sphere!
 ] ;-- End System Global
 
-Trace: routine[
-		/local nx ny ns
-				lower_left_corner
-				vertical horizontal	origin look-at
-				v-up cam-u cam-v cam-w
-				u v fi fnx fj fny
-				v-FOV aspect theta half-height half-width
-				vec3-sub vec3-add vec3-mul
-				Set-Camera vec3-len vec3-unitvector vec3-cross vec3-Mfloat vec3-Dfloat get-rand
-				vec3-random-in-unit-sphere
-				vec3-reflect
-				vec3-dot
-				get-ray color hit-list-hit scatter hit-sphere ray-pap
+Trace: routine [
+	/local nx ny ns
+		lower_left_corner
+		vertical horizontal	origin look-at
+		v-up cam-u cam-v cam-w
+		u v fi fnx fj fny
+		v-FOV aspect theta half-height half-width
+		vec3-sub vec3-add vec3-mul
+		Set-Camera vec3-len vec3-unitvector vec3-cross vec3-Mfloat vec3-Dfloat get-rand
+		vec3-random-in-unit-sphere
+		vec3-reflect
+		vec3-dot
+		get-ray color hit-list-hit scatter hit-sphere ray-pap
 
+][
+	_random/init
+	_random/srand 123
+
+	vector3!: alias struct! [
+		x [float!]
+		y [float!]
+		z [float!]
+	]
+
+	get-rand: func [
+		return: [float!]
+		/local
+			f 	[float!]
 		][
-		_random/init
-		_random/srand 123
+			f: as float! _random/rand
+			f: ((f // 20000.0) / 10000.0) - 1.0
+			return f
+	]
 
-		vector3!: alias struct! [
-		    x [float!]
-		    y [float!]
-		    z [float!]
+	vec3-sub: func [
+		dest 	[vector3!]
+		a 		[vector3!]
+		b 		[vector3!]
+		][
+			dest/x: a/x - b/x
+			dest/y: a/y - b/y
+			dest/z: a/z - b/z
 		]
 
-		get-rand: func[
-    		return: [float!]
-    		/local
-    			f 	[float!]
-    		][
-        		f: as float! _random/rand
-        		f: ((f // 20000.0) / 10000.0) - 1.0
-        		return f
-   		]
+	vec3-add: func [
+		dest 	[vector3!]
+		a 		[vector3!]
+		b 		[vector3!]
+		][
+			dest/x: a/x + b/x
+			dest/y: a/y + b/y
+			dest/z: a/z + b/z
+		]
 
-		vec3-sub: func [
-			dest 	[vector3!]
-		    a 		[vector3!]
-		    b 		[vector3!]
-		    ][
-		    	dest/x: a/x - b/x
-		    	dest/y: a/y - b/y
-		    	dest/z: a/z - b/z
-		    ]
+	vec3-mul: func [
+		dest 	[vector3!]
+		a 		[vector3!]
+		b 		[vector3!]
+		][
+			dest/x: a/x * b/x
+			dest/y: a/y * b/y
+			dest/z: a/z * b/z
+		]
 
-		vec3-add: func [
-			dest 	[vector3!]
-		    a 		[vector3!]
-		    b 		[vector3!]
-		    ][
-		    	dest/x: a/x + b/x
-		    	dest/y: a/y + b/y
-		    	dest/z: a/z + b/z
-		    ]
+	vec3-Mfloat: func [
+		dest 	[Vector3!]
+		vec 	[vector3!]
+		f 		[float!]
+		][
+			dest/x: vec/x * f
+			dest/y: vec/y * f
+			dest/z: vec/z * f
+		]
 
-		vec3-mul: func [
-			dest 	[vector3!]
-		    a 		[vector3!]
-		    b 		[vector3!]
-		    ][
-		    	dest/x: a/x * b/x
-		    	dest/y: a/y * b/y
-		    	dest/z: a/z * b/z
-		    ]
+	vec3-Dfloat: func [
+		dest 	[vector3!]
+		vec 	[vector3!]
+		f  		[float!]
+		][
+			dest/x: vec/x / f
+			dest/y: vec/y / f
+			dest/z: vec/z / f
+		]
 
-		vec3-Mfloat: func [
-			dest 	[Vector3!]
-    		vec 	[vector3!]
-    		f 		[float!]
-    		][
-    			dest/x: vec/x * f
-    			dest/y: vec/y * f
-    			dest/z: vec/z * f
+	vec3-dot: func [
+		a 		[vector3!]
+		b 		[vector3!]
+		return: [float!]
+		][
+			 (a/x * b/x) + (a/y * b/y) + (a/z * b/z)
+		]
+
+	vec3-cross: func [
+		dest 	[vector3!]
+		a 		[vector3!]
+		b 		[vector3!]
+		][
+			dest/x: (a/y * b/z) - (a/z * b/y)
+			dest/y: -1.0 * ((a/x * b/z) - (a/z * b/x))
+			dest/z: (a/x * b/y) - (a/y * b/x)
+		]
+
+
+	vec3-len: func [
+		a 		[vector3!]
+		return: [float!]
+		][
+			sqrt ((a/x * a/x) + (a/y * a/y) + (a/z * a/z))
+		]
+
+
+	vec3-unitvector: func [
+		a 		[vector3!]
+		/local
+			normalizeLength [float!]
+		][
+			normalizeLength: vec3-len a
+			vec3-Dfloat a a normalizeLength
+		]
+
+	vec3-random-in-unit-sphere: func [
+		dest 	[vector3!]
+		/local
+			t 	[float!]
+			l 	[float!]
+			m 	[float!]
+			n 	[float!]
+		][
+			t: 2.0
+
+			while [t >= 1.0][
+				l: get-rand m: get-rand n: get-rand
+				t: (l * l) + (m * m) + (n * n)
 			]
 
-		vec3-Dfloat: func [
-			dest 	[vector3!]
-    		vec 	[vector3!]
-    		f  		[float!]
-    		][
-    		    dest/x: vec/x / f
-    		    dest/y: vec/y / f
-    		    dest/z: vec/z / f
-    		]
+			dest/x: l dest/y: m dest/z: n
 
-		vec3-dot: func [
-		    a 		[vector3!]
-		    b 		[vector3!]
-		    return: [float!]
-		    ][
-		         (a/x * b/x) + (a/y * b/y) + (a/z * b/z)
-		    ]
+		]
 
-		vec3-cross: func [
-			dest 	[vector3!]
-		    a 		[vector3!]
-		    b 		[vector3!]
-		    ][
-		    	dest/x: (a/y * b/z) - (a/z * b/y)
-		    	dest/y: -1.0 * ((a/x * b/z) - (a/z * b/x))
-		    	dest/z: (a/x * b/y) - (a/y * b/x)
-		    ]
+	vec3-reflect: function [
+		dest 	[vector3!]
+		a 		[vector3!]
+		b 		[vector3!]
+		/local
+			tf 	[float!]
+			v0 	[vector3!]
+			v1 	[vector3!]
+	][
+		v0: as vector3! allocate size? vector3!
+		v1: as vector3! allocate size? vector3!
 
+		v0/x: a/x
+		v0/y: a/y
+		v0/z: a/z
 
-		vec3-len: func [
-		    a 		[vector3!]
-		    return: [float!]
-		    ][
-		        sqrt ((a/x * a/x) + (a/y * a/y) + (a/z * a/z))
-		    ]
+		v1/x: b/x
+		v1/y: b/y
+		v1/z: b/z
+
+		tf: vec3-dot v0 v1
+		tf: tf * 2.0
+
+		vec3-Mfloat dest v1 tf
+		vec3-sub dest v0 dest
+
+		free as byte-ptr! v0
+		free as byte-ptr! v1
+	]
 
 
-		vec3-unitvector: func [
-		    a 		[vector3!]
-		    /local
-		    	normalizeLength [float!]
-		    ][
-		    	normalizeLength: vec3-len a
-		    	vec3-Dfloat a a normalizeLength
-		    ]
+	color: func [
+		dest 	[vector3!]
+		rorigin [vector3!]
+		rdirection [vector3!]
+		depth 	[integer!]
+		return:	[integer!]
+		/local
+			unit-dir 	[vector3!]
+			t 			[float!]
+			v1 			[vector3!]
+			v2 			[vector3!]
+			v0 			[vector3!]
+			rec-t 		[pointer! [float!]]
+			rec-p 		[vector3!]
+			rec-n 		[vector3!]
+			rec-mat 	[material!]
+			scattered-dir 	 [vector3!]
+			scattered-origin [vector3!]
+			attenuation [vector3!]
+			scres 		[logic!]
+			d 			[integer!]
+			check 		[logic!]
+	][
+		rec-t: declare pointer! [float!]
+		rec-p: as vector3! allocate size? vector3!
+		rec-n: as vector3! allocate size? vector3!
+		rec-mat: as material! allocate size? material!
+		rec-mat/type: 1
+		rec-p/x: 0.0
+		rec-p/y: 0.0
+		rec-p/z: 0.0
+		rec-n/x: 0.0
+		rec-n/y: 0.0
+		rec-n/z: 0.0
 
-		vec3-random-in-unit-sphere: func [
-			dest 	[vector3!]
-			/local
-				t 	[float!]
-				l 	[float!]
-				m 	[float!]
-				n 	[float!]
+		v0: as vector3! allocate size? vector3!
+		attenuation: as vector3! allocate size? vector3!
+
+		scattered-dir: as vector3! allocate size? vector3!
+		scattered-dir/x: 0.0
+		scattered-dir/y: 0.0
+		scattered-dir/z: 0.0
+
+		scattered-origin: as vector3! allocate size? vector3!
+		scattered-origin/x: 0.0
+		scattered-origin/y: 0.0
+		scattered-origin/z: 0.0
+
+		unit-dir: declare vector3!
+
+		v1: declare vector3! v1/x: 1.0 v1/y: 1.0 v1/z: 1.0
+		v2: declare vector3! v2/x: 0.5 v2/y: 0.7 v2/z: 1.0
+
+		d: depth
+		check: false
+		scres: false
+
+		check: hit-list-hit rOrigin rDirection 0.001 1.0e32 rec-t rec-p rec-n rec-mat
+
+		if (check) [
+			scres: scatter rOrigin rDirection rec-p rec-n attenuation scattered-origin scattered-dir rec-mat
+			either all [scres = true d < Max-Reflection-Depth][
+				color v0 scattered-origin scattered-dir (d + 1)
+				vec3-mul dest v0 attenuation
+				free as byte-ptr! attenuation
+				free as byte-ptr! scattered-dir
+				free as byte-ptr! scattered-origin
+				free as byte-ptr! v0
+				free as byte-ptr! rec-p
+				free as byte-ptr! rec-n
+				free as byte-ptr! rec-mat
+				return 1
 			][
-				t: 2.0
-
-				while [t >= 1.0][
-					l: get-rand m: get-rand n: get-rand
-					t: (l * l) + (m * m) + (n * n)
-				]
-
-				dest/x: l dest/y: m dest/z: n
-
-		    ]
-
-		vec3-reflect: function [
-			dest 	[vector3!]
-		    a 		[vector3!]
-		    b 		[vector3!]
-		    /local
-		    	tf 	[float!]
-		    	v0 	[vector3!]
-		    	v1 	[vector3!]
-		][
-		    v0: as vector3! allocate size? vector3!
-			v1: as vector3! allocate size? vector3!
-
-			v0/x: a/x
-			v0/y: a/y
-			v0/z: a/z
-
-			v1/x: b/x
-			v1/y: b/y
-			v1/z: b/z
-
-		    tf: vec3-dot v0 v1
-		    tf: tf * 2.0
-
-		    vec3-Mfloat dest v1 tf
-		    vec3-sub dest v0 dest
-
-		    free as byte-ptr! v0
-			free as byte-ptr! v1
-		]
-
-
-		color: func[
-			dest 	[vector3!]
-			rorigin [vector3!]
-			rdirection [vector3!]
-			depth 	[integer!]
-			return:	[integer!]
-			/local
-				unit-dir 	[vector3!]
-				t 			[float!]
-				v1 			[vector3!]
-				v2 			[vector3!]
-				v0 			[vector3!]
-				rec-t 		[pointer! [float!]]
-				rec-p 		[vector3!]
-				rec-n 		[vector3!]
-				rec-mat 	[material!]
-				scattered-dir 	 [vector3!]
-				scattered-origin [vector3!]
-				attenuation [vector3!]
-				scres 		[logic!]
-				d 			[integer!]
-				check 		[logic!]
-		][
-			rec-t: declare pointer! [float!]
-			rec-p: as vector3! allocate size? vector3!
-			rec-n: as vector3! allocate size? vector3!
-			rec-mat: as material! allocate size? material!
-			rec-mat/type: 1
-			rec-p/x: 0.0
-			rec-p/y: 0.0
-			rec-p/z: 0.0
-			rec-n/x: 0.0
-			rec-n/y: 0.0
-			rec-n/z: 0.0
-
-			v0: as vector3! allocate size? vector3!
-			attenuation: as vector3! allocate size? vector3!
-
-			scattered-dir: as vector3! allocate size? vector3!
-			scattered-dir/x: 0.0
-			scattered-dir/y: 0.0
-			scattered-dir/z: 0.0
-
-			scattered-origin: as vector3! allocate size? vector3!
-			scattered-origin/x: 0.0
-			scattered-origin/y: 0.0
-			scattered-origin/z: 0.0
-
-			unit-dir: declare vector3!
-
-			v1: declare vector3! v1/x: 1.0 v1/y: 1.0 v1/z: 1.0
-			v2: declare vector3! v2/x: 0.5 v2/y: 0.7 v2/z: 1.0
-
-			d: depth
-			check: false
-			scres: false
-
-			check: hit-list-hit rOrigin rDirection 0.001 1.0e32 rec-t rec-p rec-n rec-mat
-
-			if (check)[
-				scres: scatter rOrigin rDirection rec-p rec-n attenuation scattered-origin scattered-dir rec-mat
-				either all[scres = true d < Max-Reflection-Depth][
-					color v0 scattered-origin scattered-dir (d + 1)
-					vec3-mul dest v0 attenuation
-					free as byte-ptr! attenuation
-					free as byte-ptr! scattered-dir
-					free as byte-ptr! scattered-origin
-					free as byte-ptr! v0
-					free as byte-ptr! rec-p
-					free as byte-ptr! rec-n
-					free as byte-ptr! rec-mat
-					return 1
-				][
-					dest/x: 0.0 dest/y: 0.0 dest/z: 0.0
-					free as byte-ptr! attenuation
-					free as byte-ptr! scattered-dir
-					free as byte-ptr! scattered-origin
-					free as byte-ptr! v0
-					free as byte-ptr! rec-p
-					free as byte-ptr! rec-n
-					free as byte-ptr! rec-mat
-					return 0
-				]
+				dest/x: 0.0 dest/y: 0.0 dest/z: 0.0
+				free as byte-ptr! attenuation
+				free as byte-ptr! scattered-dir
+				free as byte-ptr! scattered-origin
+				free as byte-ptr! v0
+				free as byte-ptr! rec-p
+				free as byte-ptr! rec-n
+				free as byte-ptr! rec-mat
+				return 0
 			]
-			unit-dir: rdirection
-			vec3-unitvector unit-dir
-			t: 0.5 * (unit-dir/y + 1.0)
-			vec3-Mfloat v2 v2 t
-			vec3-Mfloat v1 v1 (1.0 - t)
-			vec3-add dest v1 v2
-			free as byte-ptr! attenuation
-			free as byte-ptr! scattered-dir
-			free as byte-ptr! scattered-origin
-			free as byte-ptr! v0
-			free as byte-ptr! rec-p
-			free as byte-ptr! rec-n
-			free as byte-ptr! rec-mat
-			return 2
 		]
+		unit-dir: rdirection
+		vec3-unitvector unit-dir
+		t: 0.5 * (unit-dir/y + 1.0)
+		vec3-Mfloat v2 v2 t
+		vec3-Mfloat v1 v1 (1.0 - t)
+		vec3-add dest v1 v2
+		free as byte-ptr! attenuation
+		free as byte-ptr! scattered-dir
+		free as byte-ptr! scattered-origin
+		free as byte-ptr! v0
+		free as byte-ptr! rec-p
+		free as byte-ptr! rec-n
+		free as byte-ptr! rec-mat
+		return 2
+	]
 
-		scatter: func[
-			rorigin-in		[vector3!]
-			rdirection-in 	[vector3!]
-			rec-p 			[vector3!]
-			rec-n 			[vector3!]
-			attenuation 	[vector3!]
-			scattered-origin[vector3!]
-			scattered-dir 	[vector3!]
-			mat 			[material!]
-			return: 		[logic!]
-			/local
-				target 		[vector3!]
-				v1 			[vector3!]
-				f 			[float!]
-				v3 			[vector3!]
-				temp-rec-n 	[vector3!]
-				temp-rec-p 	[vector3!]
-				temp-scat-dir  [vector3!]
-				temp-scat-orig [vector3!]
-		][
-			target: as vector3! allocate size? vector3!
-			v1: as vector3! allocate size? vector3!
-			v3: as vector3! allocate size? vector3!
-			temp-rec-n: as vector3! allocate size? vector3!
-			temp-rec-p: as vector3! allocate size? vector3!
-			temp-scat-dir: as vector3! allocate size? vector3!
-			temp-scat-orig: as vector3! allocate size? vector3!
+	scatter: func [
+		rorigin-in		[vector3!]
+		rdirection-in 	[vector3!]
+		rec-p 			[vector3!]
+		rec-n 			[vector3!]
+		attenuation 	[vector3!]
+		scattered-origin[vector3!]
+		scattered-dir 	[vector3!]
+		mat 			[material!]
+		return: 		[logic!]
+		/local
+			target 		[vector3!]
+			v1 			[vector3!]
+			f 			[float!]
+			v3 			[vector3!]
+			temp-rec-n 	[vector3!]
+			temp-rec-p 	[vector3!]
+			temp-scat-dir  [vector3!]
+			temp-scat-orig [vector3!]
+	][
+		target: as vector3! allocate size? vector3!
+		v1: as vector3! allocate size? vector3!
+		v3: as vector3! allocate size? vector3!
+		temp-rec-n: as vector3! allocate size? vector3!
+		temp-rec-p: as vector3! allocate size? vector3!
+		temp-scat-dir: as vector3! allocate size? vector3!
+		temp-scat-orig: as vector3! allocate size? vector3!
 
-			switch mat/type[
-				1[	;-- Lambert
-					vec3-random-in-unit-sphere v1
-					vec3-add target rec-p rec-n
-					vec3-add temp-scat-dir target v1
-					vec3-sub temp-scat-dir temp-scat-dir rec-p
-					scattered-origin/x: rec-p/x scattered-origin/y: rec-p/y scattered-origin/z: rec-p/z
-					scattered-dir/x: temp-scat-dir/x scattered-dir/y: temp-scat-dir/y scattered-dir/z: temp-scat-dir/z
+		switch mat/type [
+			1 [	;-- Lambert
+				vec3-random-in-unit-sphere v1
+				vec3-add target rec-p rec-n
+				vec3-add temp-scat-dir target v1
+				vec3-sub temp-scat-dir temp-scat-dir rec-p
+				scattered-origin/x: rec-p/x scattered-origin/y: rec-p/y scattered-origin/z: rec-p/z
+				scattered-dir/x: temp-scat-dir/x scattered-dir/y: temp-scat-dir/y scattered-dir/z: temp-scat-dir/z
 
-					attenuation/x: mat/param1/x
-					attenuation/y: mat/param1/y
-					attenuation/z: mat/param1/z
-					free as byte-ptr! target
-					free as byte-ptr! v1
-					free as byte-ptr! v3
-					free as byte-ptr! temp-rec-n
-					free as byte-ptr! temp-rec-p
-					free as byte-ptr! temp-scat-dir
-					free as byte-ptr! temp-scat-orig
-					return true
-				]
-				2[  ;-- Metal
-					v3: rdirection-in
-					vec3-unitvector v3
-					vec3-reflect scattered-dir v3 rec-n
-
-					vec3-random-in-unit-sphere v3
-					vec3-Mfloat v3 v3 mat/param2
-					vec3-add scattered-dir scattered-dir v3
-
-					scattered-origin/x: rec-p/x scattered-origin/y: rec-p/y scattered-origin/z: rec-p/z
-					attenuation/x: mat/param1/x
-					attenuation/y: mat/param1/y
-					attenuation/z: mat/param1/z
-					f: vec3-dot scattered-dir rec-n
-					free as byte-ptr! target
-					free as byte-ptr! v1
-					free as byte-ptr! v3
-					free as byte-ptr! temp-rec-n
-					free as byte-ptr! temp-rec-p
-					free as byte-ptr! temp-scat-dir
-					free as byte-ptr! temp-scat-orig
-					return (f > 0.0)
-				]
-					;3[]
+				attenuation/x: mat/param1/x
+				attenuation/y: mat/param1/y
+				attenuation/z: mat/param1/z
+				free as byte-ptr! target
+				free as byte-ptr! v1
+				free as byte-ptr! v3
+				free as byte-ptr! temp-rec-n
+				free as byte-ptr! temp-rec-p
+				free as byte-ptr! temp-scat-dir
+				free as byte-ptr! temp-scat-orig
+				return true
 			]
-			free as byte-ptr! target
-			free as byte-ptr! v1
-			free as byte-ptr! v3
-			free as byte-ptr! temp-rec-n
-			free as byte-ptr! temp-rec-p
-			free as byte-ptr! temp-scat-dir
-			free as byte-ptr! temp-scat-orig
-			return false
-		]
+			2 [  ;-- Metal
+				v3: rdirection-in
+				vec3-unitvector v3
+				vec3-reflect scattered-dir v3 rec-n
 
-		get-ray: func[
-			s 			[float!]
-			t 			[float!]
-			horizontal 	[vector3!]
-			vertical 	[vector3!]
-			lower_left_corner [vector3!]
-			origin 		[vector3!]
-			dest 		[vector3!]
-			/local
-				temps 	[vector3!]
-				tempt 	[vector3!]
-		][
-			temps: as vector3! allocate size? vector3!
-			tempt: as vector3! allocate size? vector3!
-			vec3-Mfloat temps horizontal s
-			vec3-Mfloat tempt vertical t
-			vec3-add dest lower_left_corner temps
-			vec3-add dest dest tempt
-			vec3-sub dest dest origin
-			free as byte-ptr! temps
-			free as byte-ptr! tempt
-		]
+				vec3-random-in-unit-sphere v3
+				vec3-Mfloat v3 v3 mat/param2
+				vec3-add scattered-dir scattered-dir v3
 
-
-		hit-list-hit: func[
-			rorigin 	[vector3!]
-			rdirection 	[vector3!]
-			t-min 		[float!]
-			t-max 		[float!]
-			rec-t 		[pointer! [float!]]
-			rec-p 		[vector3!]
-			rec-n 		[vector3!]
-			rec-mat		[material!]
-			return: 	[logic!]
-			/local
-				hit-anything 	[logic!]
-				closest-so-far 	[float!]
-				list-len 		[integer!]
-				list-as-array 	[byte-ptr!]
-				item 			[sphere!]
-				i 				[integer!]
-				check 			[logic!]
-				temp-rec-t 		[pointer! [float!]]
-				temp-rec-p 		[vector3!]
-				temp-rec-n 		[vector3!]
-				temp-rec-mat 	[material!]
-		][
-			temp-rec-t: declare pointer! [float!]
-			temp-rec-p: as vector3! allocate size? vector3!
-			temp-rec-n: as vector3! allocate size? vector3!
-			temp-rec-mat: as material! allocate size? material!
-
-			hit-anything: false
-			closest-so-far: t-max
-
-			list-len: 16
-			item: declare sphere!
-			list-as-array: as byte-ptr! hit-list
-			i: 1
-			until [
-				item: as sphere! list-as-array
-			   	check: hit-sphere item/center item/radius t-min closest-so-far rorigin rdirection temp-rec-t temp-rec-p temp-rec-n
-			    if (check) [
-			    	hit-anything: true
-			    	closest-so-far: temp-rec-t/value
-			    	rec-p/x: temp-rec-p/x rec-p/y: temp-rec-p/y rec-p/z: temp-rec-p/z
-			    	rec-n/x: temp-rec-n/x rec-n/y: temp-rec-n/y rec-n/z: temp-rec-n/z
-			    	rec-t/value: temp-rec-t/value
-
-			    	rec-mat/type: item/material/type
-			    	rec-mat/param1: item/material/param1
-			    	rec-mat/param2: item/material/param2
-			    ]
-			    list-as-array: list-as-array + list-len
-			    i: i + 1
-			    i > Scene-Length
+				scattered-origin/x: rec-p/x scattered-origin/y: rec-p/y scattered-origin/z: rec-p/z
+				attenuation/x: mat/param1/x
+				attenuation/y: mat/param1/y
+				attenuation/z: mat/param1/z
+				f: vec3-dot scattered-dir rec-n
+				free as byte-ptr! target
+				free as byte-ptr! v1
+				free as byte-ptr! v3
+				free as byte-ptr! temp-rec-n
+				free as byte-ptr! temp-rec-p
+				free as byte-ptr! temp-scat-dir
+				free as byte-ptr! temp-scat-orig
+				return (f > 0.0)
 			]
-
-			free as byte-ptr! temp-rec-t
-			free as byte-ptr! temp-rec-p
-			free as byte-ptr! temp-rec-n
-			free as byte-ptr! temp-rec-mat
-			return hit-anything
+				;3[]
 		]
+		free as byte-ptr! target
+		free as byte-ptr! v1
+		free as byte-ptr! v3
+		free as byte-ptr! temp-rec-n
+		free as byte-ptr! temp-rec-p
+		free as byte-ptr! temp-scat-dir
+		free as byte-ptr! temp-scat-orig
+		return false
+	]
 
-		hit-sphere: func[
-			center		[vector3!]
-			radius 		[float!]
-			t-min		[float!]
-			t-max		[float!]
-			rorigin 	[vector3!]
-			rdirection 	[vector3!]
-			rec-t 		[pointer! [float!]]
-			rec-p 		[vector3!]
-			rec-n 		[vector3!]
-			return: 	[logic!]
-			/local
-				a 			[float!]
-				b 			[float!]
-				c 			[float!]
-				discriminant [float!]
-				oc 			[vector3!]
-				temp 		[float!]
-				ntemp 		[vector3!]
-		][
-			oc: 	as vector3! allocate size? vector3!
-			ntemp:  as vector3! allocate size? vector3!
+	get-ray: func [
+		s 			[float!]
+		t 			[float!]
+		horizontal 	[vector3!]
+		vertical 	[vector3!]
+		lower_left_corner [vector3!]
+		origin 		[vector3!]
+		dest 		[vector3!]
+		/local
+			temps 	[vector3!]
+			tempt 	[vector3!]
+	][
+		temps: as vector3! allocate size? vector3!
+		tempt: as vector3! allocate size? vector3!
+		vec3-Mfloat temps horizontal s
+		vec3-Mfloat tempt vertical t
+		vec3-add dest lower_left_corner temps
+		vec3-add dest dest tempt
+		vec3-sub dest dest origin
+		free as byte-ptr! temps
+		free as byte-ptr! tempt
+	]
 
-			vec3-sub oc rorigin center
-			a: vec3-dot rdirection rdirection
-			b: vec3-dot oc rdirection
-			c: (vec3-dot oc oc) - (radius * radius)
-			discriminant: (b * b) - (a * c)
 
-			if (discriminant > 0.0) [
-				temp: ( ( (b * -1.0) - sqrt discriminant) / a)
-				if all [temp < t-max temp > t-min][
-					rec-t/value: temp
-				 	ray-pap rec-p rorigin rdirection temp
-				 	vec3-sub ntemp rec-p center
-				 	vec3-Dfloat rec-n ntemp radius
-				 	free as byte-ptr! oc
-				 	free as byte-ptr! ntemp
-				 	return true
-				]
-				temp: ( ( (b * -1.0) + sqrt discriminant) / a)
-				if all [temp < t-max temp > t-min][
-					rec-t/value: temp
-				 	ray-pap rec-p rorigin rdirection temp
-				 	vec3-sub ntemp rec-p center
-				 	vec3-Dfloat rec-n ntemp radius
-				 	free as byte-ptr! oc
-				 	free as byte-ptr! ntemp
-				 	return true
-				]
+	hit-list-hit: func [
+		rorigin 	[vector3!]
+		rdirection 	[vector3!]
+		t-min 		[float!]
+		t-max 		[float!]
+		rec-t 		[pointer! [float!]]
+		rec-p 		[vector3!]
+		rec-n 		[vector3!]
+		rec-mat		[material!]
+		return: 	[logic!]
+		/local
+			hit-anything 	[logic!]
+			closest-so-far 	[float!]
+			list-len 		[integer!]
+			list-as-array 	[byte-ptr!]
+			item 			[sphere!]
+			i 				[integer!]
+			check 			[logic!]
+			temp-rec-t 		[pointer! [float!]]
+			temp-rec-p 		[vector3!]
+			temp-rec-n 		[vector3!]
+			temp-rec-mat 	[material!]
+	][
+		temp-rec-t: declare pointer! [float!]
+		temp-rec-p: as vector3! allocate size? vector3!
+		temp-rec-n: as vector3! allocate size? vector3!
+		temp-rec-mat: as material! allocate size? material!
+
+		hit-anything: false
+		closest-so-far: t-max
+
+		list-len: 16
+		item: declare sphere!
+		list-as-array: as byte-ptr! hit-list
+		i: 1
+		until [
+			item: as sphere! list-as-array
+			check: hit-sphere item/center item/radius t-min closest-so-far rorigin rdirection temp-rec-t temp-rec-p temp-rec-n
+			if (check) [
+				hit-anything: true
+				closest-so-far: temp-rec-t/value
+				rec-p/x: temp-rec-p/x rec-p/y: temp-rec-p/y rec-p/z: temp-rec-p/z
+				rec-n/x: temp-rec-n/x rec-n/y: temp-rec-n/y rec-n/z: temp-rec-n/z
+				rec-t/value: temp-rec-t/value
+
+				rec-mat/type: item/material/type
+				rec-mat/param1: item/material/param1
+				rec-mat/param2: item/material/param2
 			]
-			free as byte-ptr! oc
-			free as byte-ptr! ntemp
-			return false
+			list-as-array: list-as-array + list-len
+			i: i + 1
+			i > Scene-Length
 		]
 
-		ray-pap: func [
-			dest 		[vector3!]
-			origin 		[vector3!]
-			direction 	[vector3!]
-			t 			[float!]
-		][
-			vec3-Mfloat dest direction t
-			vec3-add dest dest origin
+		free as byte-ptr! temp-rec-t
+		free as byte-ptr! temp-rec-p
+		free as byte-ptr! temp-rec-n
+		free as byte-ptr! temp-rec-mat
+		return hit-anything
+	]
+
+	hit-sphere: func [
+		center		[vector3!]
+		radius 		[float!]
+		t-min		[float!]
+		t-max		[float!]
+		rorigin 	[vector3!]
+		rdirection 	[vector3!]
+		rec-t 		[pointer! [float!]]
+		rec-p 		[vector3!]
+		rec-n 		[vector3!]
+		return: 	[logic!]
+		/local
+			a 			[float!]
+			b 			[float!]
+			c 			[float!]
+			discriminant [float!]
+			oc 			[vector3!]
+			temp 		[float!]
+			ntemp 		[vector3!]
+	][
+		oc: 	as vector3! allocate size? vector3!
+		ntemp:  as vector3! allocate size? vector3!
+
+		vec3-sub oc rorigin center
+		a: vec3-dot rdirection rdirection
+		b: vec3-dot oc rdirection
+		c: (vec3-dot oc oc) - (radius * radius)
+		discriminant: (b * b) - (a * c)
+
+		if (discriminant > 0.0) [
+			temp: ( ( (b * -1.0) - sqrt discriminant) / a)
+			if all [temp < t-max temp > t-min][
+				rec-t/value: temp
+				ray-pap rec-p rorigin rdirection temp
+				vec3-sub ntemp rec-p center
+				vec3-Dfloat rec-n ntemp radius
+				free as byte-ptr! oc
+				free as byte-ptr! ntemp
+				return true
+			]
+			temp: ( ( (b * -1.0) + sqrt discriminant) / a)
+			if all [temp < t-max temp > t-min][
+				rec-t/value: temp
+				ray-pap rec-p rorigin rdirection temp
+				vec3-sub ntemp rec-p center
+				vec3-Dfloat rec-n ntemp radius
+				free as byte-ptr! oc
+				free as byte-ptr! ntemp
+				return true
+			]
 		]
+		free as byte-ptr! oc
+		free as byte-ptr! ntemp
+		return false
+	]
+
+	ray-pap: func [
+		dest 		[vector3!]
+		origin 		[vector3!]
+		direction 	[vector3!]
+		t 			[float!]
+	][
+		vec3-Mfloat dest direction t
+		vec3-add dest dest origin
+	]
 
 ] ;end of trace routine
 
 
 
-render: routine[
+render: routine [
 	half-height 	[float!]
 	half-width 		[float!]
 	nx 				[integer!]
@@ -587,99 +592,101 @@ render: routine[
 		tempv 				[vector3!]
 		pix 				[int-ptr!]
 		handle
-
+		maxj				[integer!]
 ][
 
-			handle: 0
-			pix: image/acquire-buffer img :handle
+	handle: 0
+	pix: image/acquire-buffer img :handle
 
-			lower_left_corner: declare vector3!
-			vertical: declare vector3!
-			horizontal: declare vector3!
-			origin: declare vector3!
-			look-at: declare vector3!
-			v-up: declare vector3!
-			cam-u: declare vector3!
-			cam-v: declare vector3!
-			cam-w: declare vector3!
+	lower_left_corner: declare vector3!
+	vertical: declare vector3!
+	horizontal: declare vector3!
+	origin: declare vector3!
+	look-at: declare vector3!
+	v-up: declare vector3!
+	cam-u: declare vector3!
+	cam-v: declare vector3!
+	cam-w: declare vector3!
 
-			origin/x: px 				origin/y: py 				origin/z: pz
-			look-at/x: tx				look-at/y: ty 				look-at/z: tz
-			v-up/x: 0.0 				v-up/y: 1.0 				v-up/z: 0.0
+	origin/x: px 				origin/y: py 				origin/z: pz
+	look-at/x: tx				look-at/y: ty 				look-at/z: tz
+	v-up/x: 0.0 				v-up/y: 1.0 				v-up/z: 0.0
 
-			vec3-sub cam-w origin look-at
-			vec3-unitvector cam-w
-			vec3-cross cam-u v-up cam-w
-			vec3-unitvector cam-u
-			vec3-cross cam-v cam-w cam-u
-
-
-			vec3-Mfloat lower_left_corner cam-u half-width
-			vec3-Mfloat vertical cam-v half-height
-			vec3-sub lower_left_corner origin lower_left_corner
-			vec3-sub lower_left_corner lower_left_corner vertical
-			vec3-sub lower_left_corner lower_left_corner cam-w
-
-			vec3-Mfloat horizontal cam-u (2.0 * half-width)
-			vec3-Mfloat vertical cam-v (2.0 * half-height)
-
-			i: 0
-			j: ny - 1
-			s: 0
-
-			u: 0.0
-			v: 0.0
-
-			Max-Reflection-Depth: Depth
-
-			col: declare vector3!
-			col-temp: declare vector3!
+	vec3-sub cam-w origin look-at
+	vec3-unitvector cam-w
+	vec3-cross cam-u v-up cam-w
+	vec3-unitvector cam-u
+	vec3-cross cam-v cam-w cam-u
 
 
-			ir: 0 ig: 0 ib: 0
-			fnx: as float! nx
-			fny: as float! ny
-			fns: as float! ns
+	vec3-Mfloat lower_left_corner cam-u half-width
+	vec3-Mfloat vertical cam-v half-height
+	vec3-sub lower_left_corner origin lower_left_corner
+	vec3-sub lower_left_corner lower_left_corner vertical
+	vec3-sub lower_left_corner lower_left_corner cam-w
 
-			tempv: declare vector3!
+	vec3-Mfloat horizontal cam-u (2.0 * half-width)
+	vec3-Mfloat vertical cam-v (2.0 * half-height)
 
-			{Main Loop}
-			while [j >= 0] [
-				i: 0
-				fj: as float! j
-				while [i < nx] [
-					col/x: 0.0 		col/y: 0.0 		col/z: 0.0
-					fi: as float! i
+	i: 0
+	j: ny - 1
+	maxj: j
+	s: 0
 
-					while [s < ns][
-						col-temp/x: 0.0 col-temp/y: 0.0 col-temp/z: 0.0
-						u: (fi + get-rand) / fnx
-					 	v: (fj + get-rand) / fny
+	u: 0.0
+	v: 0.0
 
-						get-ray u v horizontal vertical lower_left_corner origin tempv
-						color col-temp origin tempv 0
-						vec3-add col col col-temp
+	Max-Reflection-Depth: Depth
 
-						s: s + 1
-					]
-					vec3-Dfloat col col fns
-					ir: as integer! (255.99 * col/x)
-					ig: as integer! (255.99 * col/y)
-					ib: as integer! (255.99 * col/z)
-					pix/value: FF000000h + (ir << 16) + (ig << 8) + ib
-					;print [ir " " ig " " ib lf]
-					s: 0
-					i: i + 1
-					pix: pix + 1
-				]
-				j: j - 1
+	col: declare vector3!
+	col-temp: declare vector3!
+
+
+	ir: 0 ig: 0 ib: 0
+	fnx: as float! nx
+	fny: as float! ny
+	fns: as float! ns
+
+	tempv: declare vector3!
+
+	{Main Loop}
+	while [j >= 0] [
+		i: 0
+		fj: as float! j
+		while [i < nx] [
+			col/x: 0.0 		col/y: 0.0 		col/z: 0.0
+			fi: as float! i
+
+			while [s < ns][
+				col-temp/x: 0.0 col-temp/y: 0.0 col-temp/z: 0.0
+				u: (fi + get-rand) / fnx
+				v: (fj + get-rand) / fny
+
+				get-ray u v horizontal vertical lower_left_corner origin tempv
+				color col-temp origin tempv 0
+				vec3-add col col col-temp
+
+				s: s + 1
 			]
-			image/release-buffer img handle yes
+			vec3-Dfloat col col fns
+			ir: as integer! (255.99 * col/x)
+			ig: as integer! (255.99 * col/y)
+			ib: as integer! (255.99 * col/z)
+			pix/value: FF000000h + (ir << 16) + (ig << 8) + ib
+			;print [ir " " ig " " ib lf]
+			s: 0
+			i: i + 1
+			pix: pix + 1
+		]
+		j: j - 1
+		#call [update-progress (maxj - j) maxj]
+	]
+	image/release-buffer img handle yes
 
 
 ];-- end of render routine
 
-convert: routine[
+convert: routine [
     ob 		[block!]
     ob-len 	[integer!]
     /local
@@ -693,12 +700,12 @@ convert: routine[
     	Mvec
     	mat
 ][
-		Scene-Length: ob-len / 9
-		s: GET_BUFFER (ob)
+	Scene-Length: ob-len / 9
+	s: GET_BUFFER (ob)
 
-		head:  s/offset
-		value: head
-		tail:  s/tail
+	head:  s/offset
+	value: head
+	tail:  s/tail
 
   {  while [value < tail][
         fl: as red-float! value
@@ -720,7 +727,7 @@ convert: routine[
     sphere: hit-list
 
 
-    while [value < tail][
+    while [value < tail] [
     	fl: as red-float! value
     	sphere/radius: fl/value
 
@@ -758,10 +765,9 @@ convert: routine[
 		Mvec: Mvec + 1
 		mat: mat + 1
 	]
-
 ]
 
-parse-scene: function[
+parse-scene: function [
 	scene 	[string!]
 ][
 	translated: []
@@ -776,7 +782,7 @@ parse-scene: function[
     set name word! 'sphere
     any [radius | position ]
     [lambert | metal]
-    to end ( append translated  reduce [ ver v1 v2 v3 t m1 m2 m3 m4] )
+    to end ( append translated  reduce [ver v1 v2 v3 t m1 m2 m3 m4] )
 	]
 
 	scene2B: split scene #"^/"
@@ -787,10 +793,9 @@ parse-scene: function[
 
 	foreach i sceneB [parse i rule]
 	convert translated length? translated
-
 ]
 
-Setup-Camera: function[
+Setup-Camera: function [
 	img 	[image!]
 	Samples [string!]
 	Depth 	[string!]
@@ -824,7 +829,7 @@ Setup-Camera: function[
 		render half-height half-width x-res y-res i_samples i_depth f_px f_py f_pz f_tx f_ty f_tz img
 ]
 
-save-as-png: function[][
+save-as-png: function [] [
 	filename: request-file/save/filter["*.png"]
 	save filename display/image /as[png]
 
@@ -1066,12 +1071,19 @@ win/pane: reduce [
 			on-click: func [face [object!] event [event!]][
 				face/text: "Rendering..."	; Simple show that Rendering is in progress in the button
 				face/enable?: false			; Disabled while rendering
+				face/extra: 0%
 				parse-scene scene-block
 				Setup-Camera display/image samples depth fov posx posy posz tarx tary tarz
 				face/text: "Render"			; Set it back to previous state
 				face/enable?: true
 			]
 		]
+	]
+
+	no-progress: make face! [
+		type: 'check text: "No progress" data: false offset: 12x400 size: 115x40
+		font: font-Consolas color: 50.50.50
+		flags: [no-border]
 	]
 
 	make face! [
